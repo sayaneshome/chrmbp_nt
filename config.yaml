@@ -1,0 +1,98 @@
+# Configuration for scoring fine-mapped blood-lipid variants with HepG2 ChromBPNet models.
+# Everything reproducible lives here. Fill TODO accessions before running.
+
+cell_type: HepG2            # hepatocyte model; causal cell type for lipids, not a proxy
+
+# NOTE ON GENOME BUILD (important): the ENCODE HepG2 ChromBPNet models are hg38, but the
+# CAGI5 MPRA, the UKBB fine-mapping release, and the ABC regions below are all hg19. Coordinates
+# from those three must be lifted over to hg38 before scoring. See genome.liftover_chain and
+# src/download.py. This is a real source of error if skipped — it is also called out in the README.
+genome:
+  build: hg38
+  fasta: data/raw/hg38.fa
+  liftover_chain: data/raw/hg19ToHg38.over.chain.gz   # for hg19 inputs (CAGI5, UKBB, ABC)
+
+# --- Traits ------------------------------------------------------------------
+# UK Biobank fine-mapping, Finucane-lab "UKBB 94 traits release 1.1" (Weissbrod/Ulirsch/Finucane).
+# One tarball (UKBB_94traits_release1.1.tar.gz); lipids are three of the 94 traits. hg19.
+# Trait strings below are the release's own names — confirm against its manifest before locking.
+traits:
+  - name: LDL-C
+    trait_id: LDLC
+    finemap: data/raw/finemap/UKBB_94traits_release1.1/LDLC.tsv
+  - name: HDL-C
+    trait_id: HDLC
+    finemap: data/raw/finemap/UKBB_94traits_release1.1/HDLC.tsv
+  - name: TG
+    trait_id: TG
+    finemap: data/raw/finemap/UKBB_94traits_release1.1/TG.tsv
+
+# --- Models (both assays; the assay-concordance question needs both) ---------
+# Verified on the ENCODE portal (public, hg38). Model tarball contains the ChromBPNet folds.
+models:
+  dnase:
+    dir: models/hepg2_dnase
+    annotation: ENCSR006CUK        # ENCODE annotation set (trained on DNase-seq ENCSR149XIL)
+    model_file: ENCFF615AKY        # .tar with the model
+    url: https://www.encodeproject.org/files/ENCFF615AKY/@@download/ENCFF615AKY.tar
+  atac:
+    dir: models/hepg2_atac
+    annotation: ENCSR380YGX        # ENCODE annotation set (trained on ATAC-seq ENCSR291GJU)
+    model_file: ENCFF137WCM        # .tar with the model
+    url: https://www.encodeproject.org/files/ENCFF137WCM/@@download/ENCFF137WCM.tar
+
+# --- Variant scoring ---------------------------------------------------------
+variant_scoring:
+  input_len: 2114           # ChromBPNet input; center each variant
+  metrics: [logfc_counts, jsd_profile]   # counterfactual ref-vs-alt
+  # score |logfc| threshold for "high-scoring" in the PIP enrichment step
+  high_score_quantile: 0.90
+
+# --- Positive controls (correctness check vs paper Fig. 7d / supplement) -----
+# CAGI5 saturation-mutagenesis MPRA (Kircher et al. 2019, Nat Commun; GEO GSE126550).
+# SORT1/LDLR/F9 were all assayed in HepG2 -> matched to the HepG2 DNase model.
+# Download from the satMutMPRA portal; grab the hg19 (or hg38) TSV for these elements.
+# Per-locus correlation targets are in the paper's supplement (Zenodo 10.5281/zenodo.14735906),
+# NOT a "Table 4" — the main-text benchmark is Fig. 7d.
+cagi5:
+  mpra: data/raw/cagi5/cagi5_satmutmpra.tsv    # from https://kircherlab.bihealth.org/satMutMPRA/
+  mpra_build: hg19                              # portal offers hg19 or hg38; lift if hg19
+  control_loci: [SORT1, LDLR, F9]
+  sort1_variant: rs12740374                    # 1p13, C/EBP site-creating
+  target_supplement: "https://zenodo.org/records/14735906"  # per-locus r values
+
+# --- Regulatory regions / heritability ---------------------------------------
+# Engreitz-lab ABC predictions (Nasser 2021). Filter CellType == 'HepG2-Roadmap'. hg19.
+regions:
+  abc: data/raw/abc/AllPredictions.AvgHiC.ABC0.015.minus150.ForABCPaperV3.txt.gz
+  abc_celltype: HepG2-Roadmap
+  abc_url: https://mitra.stanford.edu/engreitz/oak/public/Nasser2021/AllPredictions.AvgHiC.ABC0.015.minus150.ForABCPaperV3.txt.gz
+ldsc:
+  ldsc_dir: ldsc                               # checkout of github.com/bulik/ldsc (make_annot.py, ldsc.py)
+  # All LDSC inputs are hg19 -> use the pre-liftover HepG2 regions (BED, hg19).
+  hepg2_regions_hg19: data/raw/ldsc/hepg2_regions_hg19.bed
+  annot_prefix: data/processed/ldsc/hepg2      # writes hepg2.{chrom}.annot.gz / .l2.ldscore.gz
+  plink_bfile: data/raw/ldsc/1000G_EUR_Phase3_plink/1000G.EUR.QC.{chrom}
+  hapmap_snps: data/raw/ldsc/hapmap3_snps/hm.{chrom}.snp
+  baseline: data/raw/ldsc/baselineLD_v2.2/baselineLD.  # baselineLD chr prefix (trailing dot)
+  weights: data/raw/ldsc/weights_hm3_no_hla/weights.
+  frqfile: data/raw/ldsc/1000G_Phase3_frq/1000G.EUR.QC.
+  sumstats_dir: data/raw/ldsc/sumstats         # munged lipid GWAS sumstats: {trait_id}.sumstats.gz
+
+# --- PIP enrichment ----------------------------------------------------------
+pip:
+  bins: [0.0, 0.01, 0.1, 0.5, 0.9, 1.0]        # posterior inclusion probability bins
+  background: matched                          # matched non-fine-mapped variants
+
+# --- Contribution / motif coherence ------------------------------------------
+contributions:
+  n_top_loci: 20
+  expected_motifs: [HNF4A, FOXA, CEBP, HNF1A]  # HepG2 lexicon, paper Fig. 5a
+  motif_db: data/raw/motifs/hocomoco.meme       # for TF-Modisco / motif matching
+
+paths:
+  processed: data/processed
+  figures: results/figures
+  tables: results/tables
+
+random_seed: 0

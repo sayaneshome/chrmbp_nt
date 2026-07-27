@@ -1,0 +1,31 @@
+name: cbp-hepg2-lipids
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - jupyterlab
+  - pyyaml
+  - pyfaidx
+  - pybigwig
+  - pybedtools
+  - bedtools
+  - samtools
+  - htslib
+  - pip:
+      - chrombpnet          # released HepG2 model inference (Keras/TF)
+      - shap                # DeepExplainer for ChromBPNet contribution scores
+      - tangermeme          # dinucleotide-shuffle refs (+ ISM utilities)
+      - modisco-lite        # motif discovery for the HepG2-lexicon coherence check
+      - pyliftover          # hg19 -> hg38 (pure python, no external binary)
+      - tqdm
+# Separate tools, run outside this env, referenced by the pipeline:
+#   - kundajelab/variant-scorer  (counterfactual ref-vs-alt scoring wrapper; or use chrombpnet's)
+#   - LDSC (ldsc.py)             (partitioned heritability; py2/py3 env of its own)
+# Keep their outputs as flat tables in data/processed/ so the notebook needs neither.
