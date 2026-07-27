@@ -1,11 +1,5 @@
 # Scoring fine-mapped blood-lipid variants with released HepG2 ChromBPNet models
 
-*Exploratory. One causal cell type (HepG2, hepatocyte model), released ATAC + DNase ChromBPNet
-models, blood lipid traits (LDL-C / HDL-C / TG). A transplant of the ChromBPNet paper's
-blood-trait analysis (Fig. 7e) to the hepatocyte / lipid axis, plus one thing the paper didn't
-report.*
-
----
 
 ## Question
 
