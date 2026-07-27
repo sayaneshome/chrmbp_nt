@@ -49,18 +49,6 @@ Two sub-questions, in order of increasing novelty:
 
 Reproduce with `scripts/run_all.sh` or step through `notebooks/analysis.ipynb`.
 
-## One figure
-
-`results/figures/pip_enrichment.png` — enrichment of high ChromBPNet variant scores across PIP bins
-for lipid traits, with the SORT1 / LDLR positive controls marked; companion panel:
-`results/figures/atac_vs_dnase_variant_scores.png` for the assay-concordance question.
-
-*(Placeholders until the notebook is run.)*
-
-## What surprised me
-
-*(Fill in after running. Candidate: whether ATAC and DNase agree on reference accessibility but
-diverge on specific variant effects, and whether the divergers are profile-shape variants.)*
 
 ## Limitations
 
