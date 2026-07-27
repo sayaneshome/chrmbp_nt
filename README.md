@@ -124,13 +124,3 @@ chrombpnet-hepg2-lipids/
 └── scripts/run_all.sh
 ```
 
-### Implementation status
-
-The framework-free core is **implemented and unit-tested** (`python tests/test_core.py`, 7 pass on
-CPU with no data): sequence one-hot/window extraction with a ref-allele mismatch guard, profile JSD,
-log2 fold-change, hg19→hg38 liftOver, and the PIP odds-ratio enrichment. The model forward pass
-(`chrombpnet_model.py`) and the DeepSHAP/modisco steps require the `chrombpnet` TF environment + a
-downloaded model, so they run on the GPU box, not here. Two spots are marked **CONFIRM** in
-`chrombpnet_model.py` (the model filename inside the ENCODE tar; the [profile, counts] head order)
-and one set of column names is marked **CONFIRM** in `variant_scoring.py`/`cagi5_repro.py` (the
-UKBB / satMutMPRA table headers) — check these once against the real downloads.
